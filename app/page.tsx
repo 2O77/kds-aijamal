@@ -259,19 +259,17 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900 flex items-center justify-center">
-        <div className="text-xl text-zinc-600 dark:text-zinc-400">
-          Yükleniyor...
-        </div>
+      <div className="min-h-screen bg-stone-50 flex items-center justify-center">
+        <div className="text-xl text-stone-600">Yükleniyor...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-50 dark:bg-zinc-900">
-      <div className="bg-white dark:bg-zinc-800 shadow-md border-b border-zinc-200 dark:border-zinc-700">
+    <div className="min-h-screen bg-stone-200">
+      <div className="bg-stone-200 shadow-md border-b border-stone-700">
         <div className="w-full px-4 py-4">
-          <h1 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
+          <h1 className="text-xl font-bold mb-4 text-stone-800">
             BURAYA BAŞLIK GELİCEK
           </h1>
           <div className="flex gap-3 flex-wrap">
@@ -313,7 +311,7 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="w-full px-4 py-6">
+      <div className="w-full px-2 py-4">
         <div ref={gridRef} className="grid-stack">
           {cells
             .filter((cell) => cell.visible)
@@ -345,7 +343,7 @@ export default function Home() {
                     </button>
                   </div>
 
-                  <div className="flex gap-1 flex-wrap mb-2 px-2">
+                  <div className="flex gap-1 flex-wrap mb-7 px-2">
                     {cell.chartNames.map((name, idx) => {
                       const chartColors = [
                         { bg: "bg-blue-500", hover: "hover:bg-blue-600" },
