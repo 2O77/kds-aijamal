@@ -47,6 +47,7 @@ type CellData = {
   chartData5: ChartData;
   chartData6: ChartData;
   chartNames: string[];
+  unitSymbols: string[];
   visibleCharts: boolean[];
   w?: number;
   h?: number;
@@ -114,6 +115,7 @@ export default function Home() {
             const metrics = branch.metrics || [];
             const chartDataMap: Record<number, ChartData> = {};
             const chartNamesMap: Record<number, string> = {};
+            const unitSymbolsMap: Record<number, string> = {};
 
             metrics.forEach((metric) => {
               if (metric.data && Array.isArray(metric.data)) {
@@ -121,6 +123,8 @@ export default function Home() {
                   metric.data
                 );
                 chartNamesMap[metric.metric_type_id] = metric.metric_name;
+                unitSymbolsMap[metric.metric_type_id] =
+                  metric.unit?.unit_symbol || "";
               }
             });
 
@@ -131,6 +135,15 @@ export default function Home() {
               chartNamesMap[4] || "Metric 4",
               chartNamesMap[5] || "Metric 5",
               chartNamesMap[6] || "Metric 6",
+            ];
+
+            const unitSymbols = [
+              unitSymbolsMap[1] || "",
+              unitSymbolsMap[2] || "",
+              unitSymbolsMap[3] || "",
+              unitSymbolsMap[4] || "",
+              unitSymbolsMap[5] || "",
+              unitSymbolsMap[6] || "",
             ];
 
             return {
@@ -145,6 +158,7 @@ export default function Home() {
               chartData5: chartDataMap[5] || { labels: [], values: [] },
               chartData6: chartDataMap[6] || { labels: [], values: [] },
               chartNames,
+              unitSymbols,
               visibleCharts: [true, true, true, true, true, true],
               w: 6,
               h: 4,
@@ -429,7 +443,14 @@ export default function Home() {
                                                 <div>
                                                   {chartData.labels[index]}
                                                 </div>
-                                                <div>{value.toFixed(2)}</div>
+                                                <div>
+                                                  {value.toFixed(2)}
+                                                  {cell.unitSymbols?.[
+                                                    chartIndex
+                                                  ]
+                                                    ? ` ${cell.unitSymbols[chartIndex]}`
+                                                    : ""}
+                                                </div>
                                               </div>
                                             </span>
                                           </div>
