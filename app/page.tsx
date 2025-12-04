@@ -7,6 +7,7 @@ import "gridstack/dist/gridstack.min.css";
 type ChartData = {
   labels: string[];
   values: number[];
+  originalMonths?: string[];
 };
 
 type Metric = {
@@ -35,6 +36,8 @@ type ApiResponse = {
   branches: Branch[];
 };
 
+type SortType = "none" | "month" | "value";
+
 type CellData = {
   id: number;
   name: string;
@@ -49,6 +52,7 @@ type CellData = {
   chartNames: string[];
   unitSymbols: string[];
   visibleCharts: boolean[];
+  sortTypes: SortType[];
   w?: number;
   h?: number;
   x?: number;
@@ -86,11 +90,12 @@ export default function Home() {
     metrics: Array<{ month: string; value: number }>
   ): ChartData => {
     if (!Array.isArray(metrics) || metrics.length === 0) {
-      return { labels: [], values: [] };
+      return { labels: [], values: [], originalMonths: [] };
     }
     const labels = metrics.map((m) => formatMonthLabel(m.month));
     const values = metrics.map((m) => m.value);
-    return { labels, values };
+    const originalMonths = metrics.map((m) => m.month);
+    return { labels, values, originalMonths };
   };
 
   useEffect(() => {
@@ -151,15 +156,40 @@ export default function Home() {
               name: branch.branch_name,
               visible: true,
               color: colors[index % colors.length],
-              chartData1: chartDataMap[1] || { labels: [], values: [] },
-              chartData2: chartDataMap[2] || { labels: [], values: [] },
-              chartData3: chartDataMap[3] || { labels: [], values: [] },
-              chartData4: chartDataMap[4] || { labels: [], values: [] },
-              chartData5: chartDataMap[5] || { labels: [], values: [] },
-              chartData6: chartDataMap[6] || { labels: [], values: [] },
+              chartData1: chartDataMap[1] || {
+                labels: [],
+                values: [],
+                originalMonths: [],
+              },
+              chartData2: chartDataMap[2] || {
+                labels: [],
+                values: [],
+                originalMonths: [],
+              },
+              chartData3: chartDataMap[3] || {
+                labels: [],
+                values: [],
+                originalMonths: [],
+              },
+              chartData4: chartDataMap[4] || {
+                labels: [],
+                values: [],
+                originalMonths: [],
+              },
+              chartData5: chartDataMap[5] || {
+                labels: [],
+                values: [],
+                originalMonths: [],
+              },
+              chartData6: chartDataMap[6] || {
+                labels: [],
+                values: [],
+                originalMonths: [],
+              },
               chartNames,
               unitSymbols,
               visibleCharts: [true, true, true, true, true, true],
+              sortTypes: ["month", "month", "month", "month", "month", "month"],
               w: 6,
               h: 4,
               x: (index % 2) * 6,
@@ -257,6 +287,58 @@ export default function Home() {
     );
   };
 
+  const toggleSortType = (cellId: number, chartIndex: number) => {
+    setCells((prev) =>
+      prev.map((cell) => {
+        if (cell.id === cellId) {
+          const newSortTypes = [...cell.sortTypes];
+          const currentSort = newSortTypes[chartIndex];
+          if (currentSort === "month") {
+            newSortTypes[chartIndex] = "value";
+          } else if (currentSort === "value") {
+            newSortTypes[chartIndex] = "none";
+          } else {
+            newSortTypes[chartIndex] = "month";
+          }
+          return { ...cell, sortTypes: newSortTypes };
+        }
+        return cell;
+      })
+    );
+  };
+
+  const getSortedChartData = (
+    chartData: ChartData,
+    sortType: SortType
+  ): ChartData => {
+    if (sortType === "none" || chartData.values.length === 0) {
+      return chartData;
+    }
+
+    const indexed = chartData.labels.map((label, index) => ({
+      label,
+      value: chartData.values[index],
+      originalMonth: chartData.originalMonths?.[index] || "",
+      originalIndex: index,
+    }));
+
+    if (sortType === "month") {
+      indexed.sort((a, b) => {
+        const dateA = new Date(a.originalMonth);
+        const dateB = new Date(b.originalMonth);
+        return dateA.getTime() - dateB.getTime();
+      });
+    } else if (sortType === "value") {
+      indexed.sort((a, b) => b.value - a.value);
+    }
+
+    return {
+      labels: indexed.map((item) => item.label),
+      values: indexed.map((item) => item.value),
+      originalMonths: indexed.map((item) => item.originalMonth),
+    };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-stone-50 flex items-center justify-center">
@@ -270,7 +352,7 @@ export default function Home() {
       <div className="bg-stone-200 shadow-md border-b border-stone-700">
         <div className="w-full px-4 py-4">
           <h1 className="text-xl font-bold mb-4 text-stone-800">
-            BURAYA BAŞLIK GELİCEK
+            CityTaste Restoran Zinciri
           </h1>
           <div className="flex gap-3 flex-wrap">
             {cells.map((cell) => {
@@ -354,17 +436,29 @@ export default function Home() {
                         { bg: "bg-teal-500", hover: "hover:bg-teal-600" },
                       ];
                       const color = chartColors[idx] || chartColors[0];
+                      const sortType = cell.sortTypes?.[idx] || "month";
+                      const sortLabel =
+                        sortType === "month"
+                          ? "(Aylık)"
+                          : sortType === "value"
+                          ? "(Değer)"
+                          : "";
                       return (
                         <button
                           key={idx}
-                          onClick={() => toggleChartVisibility(cell.id, idx)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleSortType(cell.id, idx);
+                          }}
                           className={`px-1.5 py-0.5 rounded text-xs font-medium transition-all ${
-                            cell.visibleCharts[idx]
+                            sortType === "none"
+                              ? "bg-zinc-300 text-zinc-600 hover:bg-zinc-400"
+                              : cell.visibleCharts[idx]
                               ? `${color.bg} text-white ${color.hover}`
                               : "bg-zinc-300 text-zinc-600 hover:bg-zinc-400"
                           }`}
                         >
-                          {name}
+                          {name} {sortLabel}
                         </button>
                       );
                     })}
@@ -376,19 +470,33 @@ export default function Home() {
                     </div>
                   ) : (
                     (() => {
-                      const visibleCount =
-                        cell.visibleCharts.filter(Boolean).length;
+                      const visibleCount = cell.visibleCharts
+                        .map((visible, idx) => {
+                          if (!visible) return false;
+                          const sortType = cell.sortTypes?.[idx] || "month";
+                          return sortType !== "none";
+                        })
+                        .filter(Boolean).length;
                       let gridCols = "grid-cols-3";
+                      let gap = "gap-3";
 
                       if (visibleCount === 1) {
                         gridCols = "grid-cols-1";
-                      } else if (visibleCount === 2 || visibleCount === 4) {
+                        gap = "gap-0";
+                      } else if (visibleCount === 2) {
                         gridCols = "grid-cols-2";
+                        gap = "gap-2";
+                      } else if (visibleCount === 3) {
+                        gridCols = "grid-cols-3";
+                        gap = "gap-1";
+                      } else if (visibleCount === 4) {
+                        gridCols = "grid-cols-2";
+                        gap = "gap-2";
                       }
 
                       return (
                         <div
-                          className={`grid ${gridCols} gap-3 flex-1 min-h-[280px] px-2 pb-2`}
+                          className={`grid ${gridCols} ${gap} flex-1 min-h-[280px] px-2 pb-2`}
                         >
                           {[
                             cell.chartData1,
@@ -399,6 +507,15 @@ export default function Home() {
                             cell.chartData6,
                           ].map((chartData, chartIndex) => {
                             if (!cell.visibleCharts[chartIndex]) return null;
+
+                            const sortType =
+                              cell.sortTypes?.[chartIndex] || "month";
+                            if (sortType === "none") return null;
+
+                            const sortedChartData = getSortedChartData(
+                              chartData,
+                              sortType
+                            );
 
                             const chartColors = [
                               { bg: "bg-blue-500", hover: "hover:bg-blue-600" },
@@ -422,7 +539,7 @@ export default function Home() {
                               cell.chartNames[chartIndex] ||
                               `Metric ${chartIndex + 1}`;
 
-                            if (chartData.values.length === 0) {
+                            if (sortedChartData.values.length === 0) {
                               return (
                                 <div
                                   key={chartIndex}
@@ -447,47 +564,53 @@ export default function Home() {
                                   {chartName}
                                 </h3>
                                 <div className="flex-1 flex gap-[2px] min-h-[90px]">
-                                  {chartData.values.map((value, index) => {
-                                    const maxValue = Math.max(
-                                      ...chartData.values
-                                    );
-                                    const heightPercent =
-                                      maxValue > 0
-                                        ? (value / maxValue) * 100
-                                        : 0;
+                                  {sortedChartData.values.map(
+                                    (value, index) => {
+                                      const maxValue = Math.max(
+                                        ...sortedChartData.values
+                                      );
+                                      const heightPercent =
+                                        maxValue > 0
+                                          ? (value / maxValue) * 100
+                                          : 0;
 
-                                    return (
-                                      <div
-                                        key={index}
-                                        className="flex-1 flex flex-col items-center"
-                                      >
-                                        <div className="relative w-full flex-1 flex items-end min-h-[50px]">
-                                          <div
-                                            className={`w-full ${color.bg} ${color.hover} rounded-t transition-all relative group`}
-                                            style={{
-                                              height: `${heightPercent}%`,
-                                            }}
-                                          >
-                                            <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white px-2 py-1 rounded whitespace-nowrap z-9999">
-                                              <div className="text-center">
-                                                <div>
-                                                  {chartData.labels[index]}
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="flex-1 flex flex-col items-center"
+                                        >
+                                          <div className="relative w-full flex-1 flex items-end min-h-[50px]">
+                                            <div
+                                              className={`w-full ${color.bg} ${color.hover} rounded-t transition-all relative group`}
+                                              style={{
+                                                height: `${heightPercent}%`,
+                                              }}
+                                            >
+                                              <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white px-2 py-1 rounded whitespace-nowrap z-9999">
+                                                <div className="text-center">
+                                                  <div>
+                                                    {
+                                                      sortedChartData.labels[
+                                                        index
+                                                      ]
+                                                    }
+                                                  </div>
+                                                  <div>
+                                                    {value.toFixed(2)}
+                                                    {cell.unitSymbols?.[
+                                                      chartIndex
+                                                    ]
+                                                      ? ` ${cell.unitSymbols[chartIndex]}`
+                                                      : ""}
+                                                  </div>
                                                 </div>
-                                                <div>
-                                                  {value.toFixed(2)}
-                                                  {cell.unitSymbols?.[
-                                                    chartIndex
-                                                  ]
-                                                    ? ` ${cell.unitSymbols[chartIndex]}`
-                                                    : ""}
-                                                </div>
-                                              </div>
-                                            </span>
+                                              </span>
+                                            </div>
                                           </div>
                                         </div>
-                                      </div>
-                                    );
-                                  })}
+                                      );
+                                    }
+                                  )}
                                 </div>
                               </div>
                             );
