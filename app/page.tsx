@@ -101,6 +101,8 @@ export default function Home() {
         if (!response.ok) throw new Error("Failed to fetch data");
         const apiData: ApiResponse = await response.json();
 
+        console.log(apiData);
+
         if (!apiData.branches || !Array.isArray(apiData.branches)) {
           throw new Error("Invalid data format");
         }
@@ -165,7 +167,16 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    if (gridRef.current && !gridInstance.current) {
+    if (!gridRef.current || cells.length === 0 || loading) return;
+
+    if (gridInstance.current) {
+      gridInstance.current.destroy(false);
+      gridInstance.current = null;
+    }
+
+    const timeoutId = setTimeout(() => {
+      if (!gridRef.current) return;
+
       gridInstance.current = GridStack.init(
         {
           column: 12,
@@ -179,30 +190,16 @@ export default function Home() {
         },
         gridRef.current
       );
-    }
+    }, 100);
 
     return () => {
+      clearTimeout(timeoutId);
       if (gridInstance.current) {
         gridInstance.current.destroy(false);
         gridInstance.current = null;
       }
     };
-  }, []);
-
-  useEffect(() => {
-    if (gridInstance.current) {
-      const grid = gridInstance.current;
-
-      requestAnimationFrame(() => {
-        const allElements =
-          gridRef.current?.querySelectorAll(".grid-stack-item");
-        allElements?.forEach((el) => {
-          if (!el.classList.contains("grid-stack-item")) return;
-          grid.makeWidget(el as HTMLElement);
-        });
-      });
-    }
-  }, [cells]);
+  }, [cells, loading]);
 
   const toggleCell = (id: number) => {
     setCells((prev) =>
