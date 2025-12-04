@@ -424,8 +424,13 @@ export default function Home() {
                                               height: `${heightPercent}%`,
                                             }}
                                           >
-                                            <span className="absolute -top-5 left-1/2 -translate-x-1/2 text-[8px] font-semibold opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white px-1 py-0.5 rounded whitespace-nowrap z-10">
-                                              {value.toFixed(2)}
+                                            <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white px-2 py-1 rounded whitespace-nowrap z-9999">
+                                              <div className="text-center">
+                                                <div>
+                                                  {chartData.labels[index]}
+                                                </div>
+                                                <div>{value.toFixed(2)}</div>
+                                              </div>
                                             </span>
                                           </div>
                                         </div>
