@@ -272,22 +272,43 @@ export default function Home() {
       <div className="bg-white dark:bg-zinc-800 shadow-md border-b border-zinc-200 dark:border-zinc-700">
         <div className="w-full px-4 py-4">
           <h1 className="text-xl font-bold mb-4 text-zinc-900 dark:text-zinc-100">
-            GridStack Dashboard
+            BURAYA BAŞLIK GELİCEK
           </h1>
           <div className="flex gap-3 flex-wrap">
-            {cells.map((cell) => (
-              <button
-                key={cell.id}
-                onClick={() => toggleCell(cell.id)}
-                className={`px-4 py-2 rounded-lg font-medium transition-all ${
-                  cell.visible
-                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                    : "bg-zinc-200 text-zinc-600 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"
-                }`}
-              >
-                {cell.name} {cell.visible ? "✓" : "✕"}
-              </button>
-            ))}
+            {cells.map((cell) => {
+              const getButtonColor = (colorClass: string) => {
+                if (colorClass === "bg-blue-100")
+                  return "bg-blue-500 hover:bg-blue-600";
+                if (colorClass === "bg-green-100")
+                  return "bg-green-500 hover:bg-green-600";
+                if (colorClass === "bg-purple-100")
+                  return "bg-purple-500 hover:bg-purple-600";
+                if (colorClass === "bg-orange-100")
+                  return "bg-orange-500 hover:bg-orange-600";
+                if (colorClass === "bg-pink-100")
+                  return "bg-pink-500 hover:bg-pink-600";
+                if (colorClass === "bg-teal-100")
+                  return "bg-teal-500 hover:bg-teal-600";
+                if (colorClass === "bg-yellow-100")
+                  return "bg-yellow-500 hover:bg-yellow-600";
+                if (colorClass === "bg-indigo-100")
+                  return "bg-indigo-500 hover:bg-indigo-600";
+                return "bg-blue-500 hover:bg-blue-600";
+              };
+              return (
+                <button
+                  key={cell.id}
+                  onClick={() => toggleCell(cell.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    cell.visible
+                      ? `${getButtonColor(cell.color)} text-white`
+                      : "bg-zinc-200 text-zinc-600 hover:bg-zinc-300 dark:bg-zinc-700 dark:text-zinc-400 dark:hover:bg-zinc-600"
+                  }`}
+                >
+                  {cell.name} {cell.visible ? "✓" : "✕"}
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -325,19 +346,30 @@ export default function Home() {
                   </div>
 
                   <div className="flex gap-1 flex-wrap mb-2 px-2">
-                    {cell.chartNames.map((name, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => toggleChartVisibility(cell.id, idx)}
-                        className={`px-1.5 py-0.5 rounded text-xs font-medium transition-all ${
-                          cell.visibleCharts[idx]
-                            ? "bg-zinc-800 text-white"
-                            : "bg-zinc-300 text-zinc-600 hover:bg-zinc-400"
-                        }`}
-                      >
-                        {name}
-                      </button>
-                    ))}
+                    {cell.chartNames.map((name, idx) => {
+                      const chartColors = [
+                        { bg: "bg-blue-500", hover: "hover:bg-blue-600" },
+                        { bg: "bg-green-500", hover: "hover:bg-green-600" },
+                        { bg: "bg-purple-500", hover: "hover:bg-purple-600" },
+                        { bg: "bg-orange-500", hover: "hover:bg-orange-600" },
+                        { bg: "bg-pink-500", hover: "hover:bg-pink-600" },
+                        { bg: "bg-teal-500", hover: "hover:bg-teal-600" },
+                      ];
+                      const color = chartColors[idx] || chartColors[0];
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => toggleChartVisibility(cell.id, idx)}
+                          className={`px-1.5 py-0.5 rounded text-xs font-medium transition-all ${
+                            cell.visibleCharts[idx]
+                              ? `${color.bg} text-white ${color.hover}`
+                              : "bg-zinc-300 text-zinc-600 hover:bg-zinc-400"
+                          }`}
+                        >
+                          {name}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {cell.loading ? (
