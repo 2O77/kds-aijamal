@@ -77,6 +77,7 @@ export default function Home() {
   const [branches, setBranches] = useState<Branch[]>([]);
   const [cells, setCells] = useState<CellData[]>([]);
   const [loading, setLoading] = useState(true);
+  const [comparisonCardVisible, setComparisonCardVisible] = useState(true);
 
   const formatMonthLabel = (monthString: string) => {
     const date = new Date(monthString);
@@ -243,7 +244,7 @@ export default function Home() {
         gridInstance.current = null;
       }
     };
-  }, [cells, loading]);
+  }, [cells, loading, comparisonCardVisible]);
 
   const toggleCell = (id: number) => {
     setCells((prev) =>
@@ -389,6 +390,16 @@ export default function Home() {
                 </button>
               );
             })}
+            <button
+              onClick={() => setComparisonCardVisible(!comparisonCardVisible)}
+              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                comparisonCardVisible
+                  ? "bg-red-500 hover:bg-red-600 text-white"
+                  : "bg-zinc-200 text-zinc-600 hover:bg-zinc-300"
+              }`}
+            >
+              Gelir Karşılaştırma
+            </button>
           </div>
         </div>
       </div>
@@ -622,6 +633,124 @@ export default function Home() {
                 </div>
               </div>
             ))}
+          {comparisonCardVisible &&
+            (() => {
+              const maxY = cells
+                .filter((cell) => cell.visible)
+                .reduce((max, cell) => {
+                  const cellBottom = (cell.y || 0) + (cell.h || 4);
+                  return Math.max(max, cellBottom);
+                }, 0);
+
+              return (
+                <div
+                  className="grid-stack-item"
+                  gs-id="comparison"
+                  gs-w={12}
+                  gs-h={4}
+                  gs-min-w="6"
+                  gs-min-h="3"
+                  gs-x={0}
+                  gs-y={maxY}
+                >
+                  <div className="grid-stack-item-content bg-red-100 rounded-lg shadow-lg border border-zinc-300 flex flex-col h-full overflow-auto">
+                    <div className="flex items-center justify-between mb-1 px-2 pt-2">
+                      <h2 className="text-lg font-bold text-black">
+                        Toplam Gelir Karşılaştırma
+                      </h2>
+                      <button
+                        onClick={() => setComparisonCardVisible(false)}
+                        className="w-6 h-6 flex items-center justify-center rounded hover:bg-red-200 text-zinc-600 hover:text-red-600 transition-colors"
+                        title="Close panel"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                    <div className="flex-1 px-4 pb-4">
+                      {(() => {
+                        const totalRevenues = cells.map((cell) => {
+                          const revenueData = cell.chartData1;
+                          const total = revenueData.values.reduce(
+                            (sum, val) => sum + val,
+                            0
+                          );
+                          return {
+                            name: cell.name,
+                            total,
+                            color: cell.color,
+                          };
+                        });
+
+                        const maxRevenue = Math.max(
+                          ...totalRevenues.map((r) => r.total),
+                          5000000
+                        );
+                        const threshold = 5000000;
+                        const thresholdPercent = (threshold / maxRevenue) * 100;
+
+                        return (
+                          <div className="relative h-full flex items-end gap-4 pt-6">
+                            <div
+                              className="absolute left-0 right-0 border-t-2 border-dashed border-red-500 z-10"
+                              style={{ bottom: `${thresholdPercent}%` }}
+                            >
+                              <span className="absolute -top-5 left-0 text-xs font-semibold text-red-600 bg-red-100 px-1 rounded">
+                                5M TL
+                              </span>
+                            </div>
+                            {totalRevenues.map((item, index) => {
+                              const heightPercent =
+                                maxRevenue > 0
+                                  ? (item.total / maxRevenue) * 100
+                                  : 0;
+                              const barColors = [
+                                "bg-blue-500",
+                                "bg-green-500",
+                                "bg-purple-500",
+                                "bg-orange-500",
+                                "bg-pink-500",
+                                "bg-teal-500",
+                                "bg-yellow-500",
+                                "bg-indigo-500",
+                              ];
+                              const barColor =
+                                barColors[index % barColors.length];
+
+                              return (
+                                <div
+                                  key={index}
+                                  className="flex-1 flex flex-col items-center h-full"
+                                >
+                                  <div className="flex-1 w-full flex items-end">
+                                    <div
+                                      className={`w-full ${barColor} rounded-t transition-all relative group hover:opacity-80`}
+                                      style={{ height: `${heightPercent}%` }}
+                                    >
+                                      <span className="absolute -top-12 left-1/2 -translate-x-1/2 text-sm font-semibold opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 text-white px-2 py-1 rounded whitespace-nowrap z-9999">
+                                        <div className="text-center">
+                                          <div>{item.name}</div>
+                                          <div>
+                                            {(item.total / 1000000).toFixed(2)}M
+                                            TL
+                                          </div>
+                                        </div>
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-zinc-700 mt-1 text-center truncate w-full px-1">
+                                    {item.name}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
         </div>
       </div>
     </div>
